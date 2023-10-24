@@ -7,6 +7,7 @@
 @inject ILoggedInUserModel LoggedInUser
 @inject IChatService ChatServ
 @inject IUserEndpoint UserEndpoint
+@inject NavigationManager NavManager
 
 <div class="chat-view-wrapper">
     <div class="chat-view">
@@ -66,6 +67,8 @@
 </div>
 
 @code {
+    HubConnection? _hubConnection;
+    
     private string? _messageContent; 
     private List<MessageModel> _messages = new();
     
@@ -79,23 +82,23 @@
         _users.Remove(self!);
 
         
-        // hubConnection = new HubConnectionBuilder()
-        //     .WithUrl(NavManager.ToAbsoluteUri("/chathub"), options =>
-        //     {
-        //         options.AccessTokenProvider = () => Task.FromResult("YourAccessToken");
-        //         options.Transports = HttpTransportType.WebSockets;
-        //     })
-        //     .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
-        //     .Build();
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri("/chathub"), options =>
+            {
+                options.AccessTokenProvider = () => Task.FromResult("YourAccessToken");
+                options.Transports = HttpTransportType.WebSockets;
+            })
+            .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
+            .Build();
+        
+        _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
+        await _hubConnection.StartAsync();
+        await _hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
+        
+        // await ChatServ.Connect();
+        // await ChatServ.Login(LoggedInUser.Id!);
         //
-        // hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
-        // await hubConnection.StartAsync();
-        // await hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
-        
-        await ChatServ.Connect();
-        await ChatServ.Login(LoggedInUser.Id!);
-        
-        ChatServ.MessageEvent += MessageReceived;
+        // ChatServ.MessageEvent += MessageReceived;
     }
 
     private async void MessageReceived(string action, MessageDtoModel message)
@@ -145,8 +148,8 @@
         
         _messages.Add(message);
 
-        await ChatServ.MessageSingle("add", message);
-        // await hubConnection.SendAsync("MessageSingle", "add", message);
+        // await ChatServ.MessageSingle("add", message);
+        await _hubConnection.SendAsync("MessageSingle", "add", message);
         _messageContent = "";
     }
 

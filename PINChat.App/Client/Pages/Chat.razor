@@ -5,7 +5,6 @@
 @using PINChat.App.Library.Api.Interfaces
 
 @inject ILoggedInUserModel LoggedInUser
-@inject IChatService ChatServ
 @inject IUserEndpoint UserEndpoint
 @inject NavigationManager NavManager
 
@@ -68,6 +67,7 @@
 
 @code {
     // HubConnection? _hubConnection;
+    ChatService ChatServ;
     
     private string? _messageContent; 
     private List<MessageModel> _messages = new();
@@ -92,16 +92,16 @@
             .Build();
 
 
-            ChatServ = new ChatService(hubConnection);
+        ChatServ = new ChatService(hubConnection);
             
         // _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
         // await _hubConnection.StartAsync();
         // await _hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
         
-        // await ChatServ.Connect();
-        // await ChatServ.Login(LoggedInUser.Id!);
-        //
-        // ChatServ.MessageEvent += MessageReceived;
+        await ChatServ.Connect();
+        await ChatServ.Login(LoggedInUser.Id!);
+        
+        ChatServ.MessageEvent += MessageReceived;
     }
 
     private async void MessageReceived(string action, MessageDtoModel message)

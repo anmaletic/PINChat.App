@@ -18,13 +18,10 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 //  Personal Services
 
-
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
-
-builder.Services.AddSingleton<IChatService, ChatService>();
 
 builder.Services.AddSingleton<IApiHelper, ApiHelper>();
 builder.Services.AddSingleton<ILoggedInUserModel, UserModel>();

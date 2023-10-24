@@ -4,11 +4,11 @@ using PINChat.App.Shared.Models;
 
 namespace PINChat.App.Library.Services;
 
-public class ChatService : IChatService
+public class ChatService
 {
     private readonly HubConnection _hubConnection;
     
-    public event Action<string, MessageDtoModel> MessageEvent;
+    public event Action<string, MessageDtoModel>? MessageEvent;
     
     public ChatService(HubConnection hubConnection)
     {

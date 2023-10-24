@@ -2,15 +2,12 @@ using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.AspNetCore.Http.Connections;
-using Microsoft.AspNetCore.SignalR.Client;
 using PINChat.App.Authentication;
 using PINChat.App.Client;
 using PINChat.App.Library.Api;
 using PINChat.App.Library.Api.Interfaces;
 using PINChat.App.Library.Models;
 using PINChat.App.Library.Models.Interfaces;
-using PINChat.App.Library.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");

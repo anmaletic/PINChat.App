@@ -67,7 +67,7 @@
 </div>
 
 @code {
-    HubConnection? _hubConnection;
+    // HubConnection? _hubConnection;
     
     private string? _messageContent; 
     private List<MessageModel> _messages = new();
@@ -75,14 +75,14 @@
     private List<UserModel> _users = new();
     private string? _msgTarget = "";
     
-        protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         _users = await UserEndpoint.GetAll();
         var self = _users.FirstOrDefault(x => x.Id == LoggedInUser.Id);
         _users.Remove(self!);
 
         
-        _hubConnection = new HubConnectionBuilder()
+        var hubConnection = new HubConnectionBuilder()
             .WithUrl(NavManager.ToAbsoluteUri("/chathub"), options =>
             {
                 options.AccessTokenProvider = () => Task.FromResult("YourAccessToken");
@@ -90,10 +90,13 @@
             })
             .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
             .Build();
-        
-        _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
-        await _hubConnection.StartAsync();
-        await _hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
+
+
+            ChatServ = new ChatService(hubConnection);
+            
+        // _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
+        // await _hubConnection.StartAsync();
+        // await _hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
         
         // await ChatServ.Connect();
         // await ChatServ.Login(LoggedInUser.Id!);
@@ -148,8 +151,8 @@
         
         _messages.Add(message);
 
-        // await ChatServ.MessageSingle("add", message);
-        await _hubConnection.SendAsync("MessageSingle", "add", message);
+        await ChatServ.MessageSingle("add", message);
+        // await _hubConnection.SendAsync("MessageSingle", "add", message);
         _messageContent = "";
     }
 

@@ -24,19 +24,6 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 
-var chatServer = builder.Configuration.GetValue<string>("chatServer");
-
-HubConnection hubConnection = new HubConnectionBuilder()
-    .WithUrl(chatServer, options =>
-    {
-        options.AccessTokenProvider = () => Task.FromResult("YourAccessToken");
-        options.Transports = HttpTransportType.WebSockets;
-    })
-    .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
-    .Build();
-
-builder.Services.AddSingleton(hubConnection);
-
 builder.Services.AddSingleton<IChatService, ChatService>();
 
 builder.Services.AddSingleton<IApiHelper, ApiHelper>();

@@ -1,0 +1,159 @@
+﻿@page "/Chat"
+@using PINChat.App.Library.Models.Interfaces
+@using PINChat.App.Library.Models
+@using PINChat.App.Library.Services
+@using PINChat.App.Library.Api.Interfaces
+
+@inject ILoggedInUserModel LoggedInUser
+@inject IChatService ChatServ
+@inject IUserEndpoint UserEndpoint
+
+<div class="chat-view-wrapper">
+    <div class="chat-view">
+        <aside class="chat-sidebar">
+            <div class="user-data-container">
+                @* LoggedInUser Data *@
+            
+                
+                <NavLink class="nav-link logout" href="logout">
+                    <span class="oi oi-account-logout"></span> Log Out
+                </NavLink>
+                <img src="resources/images/user-avatar.png" alt="User Avatar">
+                <H2>@LoggedInUser.DisplayName</H2>
+                <H3>@LoggedInUser.FirstName @LoggedInUser.LastName</H3>
+            </div>  
+            
+            <div class="friends-groups-container">
+                <!-- Friends and Groups go here -->
+                <h3>Contacts</h3>
+                <ul>
+                    @foreach (var contact in _users)
+                    {
+                        <li @onclick="() => SetMessageTarget(contact.Id!)">@contact.FirstName @contact.LastName</li>
+                    }
+                    
+                    <!-- Add more friends here -->
+                </ul>
+                
+                <h3>Groups</h3>
+                <ul>
+                    <li>Grupa 1</li>
+                    <li>Grupa 2</li>
+                    <li>Grupa 3</li>
+                    <li>Grupa 4</li>
+                    <!-- Add more groups here -->
+                </ul>
+            </div>
+        </aside>
+        
+        <main class="chat-container">
+            <div class="chat-output">
+                @foreach (var message in _messages)
+                {
+                    <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned message-container")">
+                        <p class="date">@message.Date.ToLocalTime()</p>
+                        <p class="message">@message.Content</p>
+                    </div>
+                }
+            </div>
+
+            <div class="chat-input">
+                <input type="text" Placeholder="Nova poruka" @bind="_messageContent" @onkeydown="@(HandleKeyDown)">
+                <button class="btn-accent" @onclick="SendMessage" >Pošalji</button>
+            </div>
+        </main>
+    </div>
+</div>
+
+@code {
+    private string? _messageContent; 
+    private List<MessageModel> _messages = new();
+    
+    private List<UserModel> _users = new();
+    private string? _msgTarget = "";
+    
+        protected override async Task OnInitializedAsync()
+    {
+        _users = await UserEndpoint.GetAll();
+        var self = _users.FirstOrDefault(x => x.Id == LoggedInUser.Id);
+        _users.Remove(self!);
+
+        
+        // hubConnection = new HubConnectionBuilder()
+        //     .WithUrl(NavManager.ToAbsoluteUri("/chathub"), options =>
+        //     {
+        //         options.AccessTokenProvider = () => Task.FromResult("YourAccessToken");
+        //         options.Transports = HttpTransportType.WebSockets;
+        //     })
+        //     .WithAutomaticReconnect(new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(5) })
+        //     .Build();
+        //
+        // hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
+        // await hubConnection.StartAsync();
+        // await hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
+        
+        await ChatServ.Connect();
+        await ChatServ.Login(LoggedInUser.Id!);
+        
+        ChatServ.MessageEvent += MessageReceived;
+    }
+
+    private async void MessageReceived(string action, MessageDtoModel message)
+    {
+        var msg = new MessageModel(LoggedInUser)
+        {
+            Date = message.Date,
+            Target = message.Target,
+            Source = message.Source,
+            Content = message.Content,
+            Image = message.Image
+        };
+        
+        switch (action)
+        {
+            case "add":
+            {
+                _messages.Add(msg);
+                StateHasChanged();   
+                break;
+            }   
+        }
+    }
+        
+    
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter")
+        {
+            await Task.Yield();
+            
+            if (!string.IsNullOrEmpty(_messageContent))
+            {
+                await SendMessage();
+            }
+        }
+    }
+    private async Task SendMessage()
+    {
+        var message = new MessageModel(LoggedInUser)
+        {
+            Date = DateTime.UtcNow,
+            Target = _msgTarget,
+            Source = LoggedInUser.Id,
+            Content = _messageContent
+        };
+        
+        _messages.Add(message);
+
+        await ChatServ.MessageSingle("add", message);
+        // await hubConnection.SendAsync("MessageSingle", "add", message);
+        _messageContent = "";
+    }
+
+    private void SetMessageTarget(string target)
+    {
+        _msgTarget = target;
+    }
+
+
+}

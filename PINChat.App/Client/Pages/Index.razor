@@ -1,0 +1,45 @@
+﻿@page "/index"
+@using PINChat.App.Library.Services
+@using PINChat.App.Library.Models
+@using PINChat.App.Library.Models.Interfaces
+
+@inject NavigationManager NavManager;
+@inject IChatService ChatServ
+@inject ILoggedInUserModel LoggedInUser
+
+@* @inject HubConnection hubConnection; *@
+
+@code
+{
+    private List<MessageModel> _messages = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+
+        ChatServ.MessageEvent += MessageReceived;
+        await ChatServ.Connect();
+        await ChatServ.Login("test");    
+    }
+
+    private void MessageReceived(string action, MessageDtoModel message)
+    {
+        var msg = new MessageModel(LoggedInUser)
+        {
+            Date = message.Date,
+            Target = message.Target,
+            Source = message.Source,
+            Content = message.Content,
+            Image = message.Image
+        };
+        
+        switch (action)
+        {
+            case "add":
+            {
+                _messages.Add(msg);
+                StateHasChanged();   
+                break;
+            }   
+        }
+    }
+}

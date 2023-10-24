@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PINChat.App.Server", "PINChat.App\Server\PINChat.App.Server.csproj", "{1D6C3EDF-DBC2-4359-8DB3-166E580417A2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PINChat.App.Client", "PINChat.App\Client\PINChat.App.Client.csproj", "{4CCF49D2-D571-4481-8A57-862D4124ED61}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PINChat.App.Shared", "PINChat.App\Shared\PINChat.App.Shared.csproj", "{5E230858-A4D2-436A-A529-8EE56B89AA45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PINChat.App.Library", "PINChat.App.Library\PINChat.App.Library.csproj", "{51A8DA40-798E-4FD0-A62B-77C34FE0B6C0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D6C3EDF-DBC2-4359-8DB3-166E580417A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D6C3EDF-DBC2-4359-8DB3-166E580417A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D6C3EDF-DBC2-4359-8DB3-166E580417A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D6C3EDF-DBC2-4359-8DB3-166E580417A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CCF49D2-D571-4481-8A57-862D4124ED61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CCF49D2-D571-4481-8A57-862D4124ED61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CCF49D2-D571-4481-8A57-862D4124ED61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CCF49D2-D571-4481-8A57-862D4124ED61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E230858-A4D2-436A-A529-8EE56B89AA45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E230858-A4D2-436A-A529-8EE56B89AA45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E230858-A4D2-436A-A529-8EE56B89AA45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E230858-A4D2-436A-A529-8EE56B89AA45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51A8DA40-798E-4FD0-A62B-77C34FE0B6C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51A8DA40-798E-4FD0-A62B-77C34FE0B6C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51A8DA40-798E-4FD0-A62B-77C34FE0B6C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51A8DA40-798E-4FD0-A62B-77C34FE0B6C0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

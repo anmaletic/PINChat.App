@@ -1,0 +1,125 @@
+﻿@page "/"
+@using PINChat.App.Library.Models
+@using PINChat.App.Authentication
+@using PINChat.App.Library.Models.Interfaces
+
+
+@inject NavigationManager NavManager
+@inject IAuthenticationService AuthService
+@inject ILoggedInUserModel loggedInUser
+
+
+
+<div class="loginView row d-flex flex-column align-items-center">
+    <div class="row col-xxl-4 col-xl-6 col-lg-6 col-md-7 col-sm-9 col- my-auto align-items-center">
+        <div>
+            <img src="resources/images/Logo.svg" alt="" width="100%">
+        </div>
+        
+        @if(_isRegistering)
+        {
+            <EditForm Model="_registrationModel" OnValidSubmit="RegisterUser">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div>
+                    <label for="userName">Korisničko ime:</label>
+                    <InputText id="userName" class="form-control" @bind-Value="_authModel.UserName"/>
+                </div>
+                <div>
+                    <label for="password" class="mt-2">Lozinka:</label>
+                    <InputText id="password" class="form-control" @bind-Value="_authModel.Password"/>
+                </div>
+                <div>
+                    <label for="password" class="mt-2">Potvrda lozinke:</label>
+                    <InputText id="password" class="form-control" @bind-Value="_authModel.Password"/>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-accent mt-4">Registracija</button>
+                </div>
+                <p style="text-align: center">
+                    <a href="" @onclick='() => SetUserState("l")' @onclick:preventDefault >Povratak na prijavu</a>.
+                </p>
+        
+            </EditForm>
+        }
+        else
+        {
+            <EditForm Model="_authModel" OnValidSubmit="LoginUser">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div>
+                    <label for="userName">Korisničko ime:</label>
+                    <InputText id="userName" class="form-control" @bind-Value="_authModel.UserName"/>
+                </div>
+                <div>
+                    <label for="password" class="mt-2">Lozinka:</label>
+                    <InputText id="password" class="form-control" @bind-Value="_authModel.Password"/>
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-accent mt-4">Prijava</button>
+                </div>
+                <p style="text-align: center">
+                    Ukoliko nemate korisnički račun,
+                    <a href="" @onclick='() => SetUserState("r")' @onclick:preventDefault >registrirajte se</a>.
+                </p>
+        
+            </EditForm>
+        }
+        @if (_showAuthenticationError)
+        {
+            <div class="form-row mt-2">
+                <div class="text-danger">
+                    * @_authenticationErrorText
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+
+@code {
+    private readonly RegistrationModel _registrationModel = new();
+    private readonly AuthenticationUserModel _authModel = new();
+    private bool _showAuthenticationError;
+    private string _authenticationErrorText = "";
+    private bool _isRegistering;
+    
+    
+    private void SetUserState(string state)
+    {
+        _isRegistering = state switch
+        {
+            "r" => true,
+            "l" => false,
+            _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)};
+    }
+    
+    // Create new user
+    private async Task RegisterUser()
+    {
+        
+    }
+    
+    // Login user
+    private async Task LoginUser()
+    {
+        _showAuthenticationError = false;
+
+        var result = await AuthService.Login(_authModel);
+
+        if (result is not null && !string.IsNullOrEmpty(loggedInUser.DisplayName))
+        {
+            NavManager.NavigateTo("/Chat");
+        }
+        else
+        {
+            _authenticationErrorText = "There was an error when trying to log in.";
+            _showAuthenticationError = true;
+        }
+    }
+}
+
+
+
+

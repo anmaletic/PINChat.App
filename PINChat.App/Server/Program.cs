@@ -41,7 +41,7 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseCors("OpenCorsPolicy");  //     todo: mozda potrebno za access..
+app.UseCors("OpenCorsPolicy");
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 

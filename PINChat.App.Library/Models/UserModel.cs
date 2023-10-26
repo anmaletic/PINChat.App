@@ -9,7 +9,8 @@ public class UserModel : ILoggedInUserModel
     public string? DisplayName { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
-    // public List<InterestModel> Interests { get; set; }
+    public List<UserModel> Contacts { get; set; } = new ();
+    // public List<GroupModel> Groups { get; set; }
     
     public void ResetUserModel()
     {
@@ -17,6 +18,7 @@ public class UserModel : ILoggedInUserModel
         DisplayName = "";
         FirstName = "";
         LastName = "";
-        // Interests = new List<InterestModel>();
+        Contacts = new List<UserModel>();
+        // Groups = new List<GroupModel>();
     }
 }

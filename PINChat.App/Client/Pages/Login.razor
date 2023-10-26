@@ -1,14 +1,14 @@
 ﻿@page "/"
 @using PINChat.App.Library.Models
 @using PINChat.App.Authentication
+@using PINChat.App.Library.Api.Interfaces
 @using PINChat.App.Library.Models.Interfaces
-
 
 @inject NavigationManager NavManager
 @inject IAuthenticationService AuthService
-@inject ILoggedInUserModel loggedInUser
-
-
+@inject ILoggedInUserModel LoggedInUser
+@inject IUserEndpoint UserEndpoint
+@inject IRegistrationEndpoint RegistrationEndpoint
 
 <div class="loginView row d-flex flex-column align-items-center">
     <div class="row col-xxl-4 col-xl-6 col-lg-6 col-md-7 col-sm-9 col- my-auto align-items-center">
@@ -18,59 +18,77 @@
         
         @if(_isRegistering)
         {
-            <EditForm Model="_registrationModel" OnValidSubmit="RegisterUser">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div>
-                    <label for="userName">Korisničko ime:</label>
-                    <InputText id="userName" class="form-control" @bind-Value="_authModel.UserName"/>
-                </div>
-                <div>
-                    <label for="password" class="mt-2">Lozinka:</label>
-                    <InputText id="password" class="form-control" @bind-Value="_authModel.Password"/>
-                </div>
-                <div>
-                    <label for="password" class="mt-2">Potvrda lozinke:</label>
-                    <InputText id="password" class="form-control" @bind-Value="_authModel.Password"/>
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-accent mt-4">Registracija</button>
-                </div>
-                <p style="text-align: center">
-                    <a href="" @onclick='() => SetUserState("l")' @onclick:preventDefault >Povratak na prijavu</a>.
-                </p>
-        
-            </EditForm>
+            <div>
+                <EditForm Model="_registrationModel" OnValidSubmit="RegisterUser">
+                    <DataAnnotationsValidator />
+                    <div class="editForm-s">
+                        <p class="editForm-h">Lozinka mora sadržavati:</p>
+                        <p class="editForm-p">* Minimalno 6 znakova</p>
+                        <p class="editForm-p">* Velika i mala slova engleske abecede</p>
+                        <p class="editForm-p">* Specijalne znakove</p>
+                    </div>
+                    <div>
+                        <label  for="userName">Korisničko ime:</label>
+                        <InputText id="userName" class="form-control"  @bind-Value="_registrationModel.UserName"/>
+                        <ValidationMessage For="() => _registrationModel.UserName" />
+                    </div>
+                    <div>
+                        <label for="password" class="mt-2">Lozinka:</label>
+                        <InputText id="password" type="password" class="form-control" @bind-Value="_registrationModel.Password"/>
+                        <ValidationMessage For="() => _registrationModel.Password" />
+                    </div>
+                    <div>
+                        <label for="password" class="mt-2">Potvrda lozinke:</label>
+                        <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="_registrationModel.ConfirmPassword"/>
+                        <ValidationMessage For="() => _registrationModel.ConfirmPassword" />
+                        
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-accent mt-4">Registracija</button>
+                    </div>
+                    <p style="text-align: center">
+                        <a href="" @onclick='() => SetUserState("l")' @onclick:preventDefault >Povratak na prijavu</a>.
+                    </p>
+            
+                </EditForm>
+            </div>
         }
         else
         {
-            <EditForm Model="_authModel" OnValidSubmit="LoginUser">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div>
-                    <label for="userName">Korisničko ime:</label>
-                    <InputText id="userName" class="form-control" @bind-Value="_authModel.UserName"/>
-                </div>
-                <div>
-                    <label for="password" class="mt-2">Lozinka:</label>
-                    <InputText id="password" class="form-control" @bind-Value="_authModel.Password"/>
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-accent mt-4">Prijava</button>
-                </div>
-                <p style="text-align: center">
-                    Ukoliko nemate korisnički račun,
-                    <a href="" @onclick='() => SetUserState("r")' @onclick:preventDefault >registrirajte se</a>.
-                </p>
-        
-            </EditForm>
+            <div>
+                <EditForm Model="_authModel" OnValidSubmit="LoginUser">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div>
+                        <label for="userName">Korisničko ime:</label>
+                        <InputText id="userName" class="form-control" @bind-Value="_authModel.UserName"/>
+                    </div>
+                    <div>
+                        <label for="password" class="mt-2">Lozinka:</label>
+                        <InputText id="password" type="password" class="form-control" @bind-Value="_authModel.Password"/>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-accent mt-4">Prijava</button>
+                    </div>
+                    <p style="text-align: center">
+                        Ukoliko nemate korisnički račun,
+                        <a href="" @onclick='() => SetUserState("r")' @onclick:preventDefault >registrirajte se</a>.
+                    </p>
+            
+                </EditForm>
+            </div>
         }
+        
         @if (_showAuthenticationError)
         {
-            <div class="form-row mt-2">
-                <div class="text-danger">
-                    * @_authenticationErrorText
-                </div>
+            <div class="text-danger">
+                * @_authenticationErrorText
+            </div>
+        }
+        @if (_isLoading)
+        {
+            <div class="spinnerContainer">
+                <div class="spinner"></div>
             </div>
         }
     </div>
@@ -84,42 +102,81 @@
     private bool _showAuthenticationError;
     private string _authenticationErrorText = "";
     private bool _isRegistering;
-    
-    
+    private bool _isLoading;
+
+
     private void SetUserState(string state)
     {
-        _isRegistering = state switch
+        switch (state)
         {
-            "r" => true,
-            "l" => false,
-            _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)};
+            case "r":
+                _isRegistering = true;
+                _registrationModel.Reset();
+                break;
+            case "l":
+                _isRegistering = false;
+                _authModel.Reset();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(state), state, null);
+        }
     }
-    
+
     // Create new user
+    // todo: maybe create RegisterPage for creating new user
     private async Task RegisterUser()
     {
-        
+        try
+        {
+            _isLoading = true;
+            
+            await RegistrationEndpoint.Register(_registrationModel);
+            
+            _registrationModel.Reset();
+            _isRegistering = false;
+        }
+        catch (Exception e)
+        {
+            _authenticationErrorText = e.Message.Replace("\"", "");
+            _showAuthenticationError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
-    
+
     // Login user
     private async Task LoginUser()
     {
-        _showAuthenticationError = false;
-
-        var result = await AuthService.Login(_authModel);
-
-        if (result is not null && !string.IsNullOrEmpty(loggedInUser.DisplayName))
+        try
         {
-            NavManager.NavigateTo("/Chat");
+            _isLoading = true;
+            _showAuthenticationError = false;
+
+            var result = await AuthService.Login(_authModel);
+
+            if (result is not null && !string.IsNullOrEmpty(LoggedInUser.DisplayName))
+            {
+                NavManager.NavigateTo("/Chat");
+            }
+            else
+            {
+                _authenticationErrorText = "There was an error when trying to log in.";
+                _showAuthenticationError = true;
+            }
         }
-        else
+        catch (Exception e)
         {
-            _authenticationErrorText = "There was an error when trying to log in.";
+
+            _authenticationErrorText = "Unable to login user.";
             _showAuthenticationError = true;
+            Console.WriteLine("Unable to login user.");
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }
-
-
-
 

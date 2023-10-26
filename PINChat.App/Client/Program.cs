@@ -23,6 +23,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 builder.Services.AddSingleton<IApiHelper, ApiHelper>();
 builder.Services.AddSingleton<ILoggedInUserModel, UserModel>();
 builder.Services.AddTransient<IUserEndpoint, UserEndpoint>();
+builder.Services.AddTransient<IRegistrationEndpoint, RegistrationEndpoint>();
 
 builder.Services.AddHttpClient("PINChat.App.ServerAPI",
     client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));

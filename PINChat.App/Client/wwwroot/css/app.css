@@ -63,6 +63,32 @@ h1:focus {
     height: 40px;
 }
 
+.spinnerContainer {
+    display: flex;
+    justify-content: center; /* Horizontally center the spinner */
+    align-items: center; /* Vertically center the spinner */
+}
+
+.spinner {
+    margin-top: 50px;
+    display: flex;
+    border: 14px solid #fff;
+    border-top: 14px solid var(--color-accent);
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: spin 1300ms linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg)
+    }
+
+    100% {
+        transform: rotate(360deg)
+    }
+}
 
 
 /*  Login View  */
@@ -233,34 +259,6 @@ h1:focus {
     margin: 0;
     padding: 0 15px 5px 15px;
 }
-
-.spinnerContainer {
-    display: flex;
-    justify-content: center; /* Horizontally center the spinner */
-    align-items: center; /* Vertically center the spinner */
-}
-
-.spinner {
-    margin-top: 50px;
-    display: flex;
-    border: 14px solid #fff;
-    border-top: 14px solid var(--color-accent);
-    border-radius: 50%;
-    width: 80px;
-    height: 80px;
-    animation: spin 1300ms linear infinite;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg)
-    }
-
-    100% {
-        transform: rotate(360deg)
-    }
-}
-
 
 
 

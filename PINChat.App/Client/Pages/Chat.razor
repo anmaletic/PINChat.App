@@ -18,17 +18,19 @@
                     <span class="oi oi-account-logout"></span> Log Out
                 </NavLink>
                 <img src="resources/images/user-avatar.png" alt="User Avatar">
-                <H2>@LoggedInUser.DisplayName</H2>
-                <H3>@LoggedInUser.FirstName @LoggedInUser.LastName</H3>
+                <h2>@LoggedInUser.DisplayName</h2>
+                <h3>@LoggedInUser.FirstName @LoggedInUser.LastName</h3>
             </div>  
             
             <div class="friends-groups-container">
                 <!-- Friends and Groups go here -->
                 <h3>Contacts</h3>
                 <ul>
-                    @foreach (var contact in _users)
+                    @foreach (var target in LoggedInUser.Contacts)
                     {
-                        <li @onclick="() => SetMessageTarget(contact.Id!)">@contact.FirstName @contact.LastName</li>
+                        <li class="@ContactIsSelected(target.Id!)" @onclick="() => SetMessageTarget(target.Id!)">
+                            @target.FirstName @target.LastName
+                        </li>
                     }
                     
                     <!-- Add more friends here -->
@@ -36,11 +38,12 @@
                 
                 <h3>Groups</h3>
                 <ul>
-                    <li>Grupa 1</li>
-                    <li>Grupa 2</li>
-                    <li>Grupa 3</li>
-                    <li>Grupa 4</li>
-                    <!-- Add more groups here -->
+                   @foreach (var target in LoggedInUser.Groups)
+                   {
+                       <li class="@ContactIsSelected(target.Id!)" @onclick="() => SetMessageTarget(target.Id!)">
+                           @target.Name
+                       </li>
+                   }
                 </ul>
             </div>
         </aside>
@@ -82,10 +85,6 @@
 
         if (authState.User.Identity!.IsAuthenticated)
         {
-            _users = await UserEndpoint.GetAll();
-            var self = _users.FirstOrDefault(x => x.Id == LoggedInUser.Id);
-            _users.Remove(self!);
-            
             ConnectToHub();
         }
     }
@@ -109,6 +108,7 @@
 
     private void MessageReceived(string action, MessageDtoModel message)
     {
+
         var msg = new MessageModel(LoggedInUser)
         {
             Date = message.Date,
@@ -118,14 +118,17 @@
             Image = message.Image
         };
         
-        switch (action)
+        if (msg.Source == _msgTarget)
         {
-            case "add":
+            switch (action)
             {
-                _messages.Add(msg);
-                StateHasChanged();   
-                break;
-            }   
+                case "add":
+                {
+                    _messages.Add(msg);
+                    StateHasChanged();   
+                    break;
+                }   
+            }
         }
     }
         
@@ -160,6 +163,14 @@
 
     private void SetMessageTarget(string target)
     {
+        _messages.Clear();
         _msgTarget = target;
     }
+    
+    // Function to check if a contact is selected
+    private string ContactIsSelected(string contactId)
+    {
+        return _msgTarget == contactId ? "selected" : "";
+    }
+    
 }

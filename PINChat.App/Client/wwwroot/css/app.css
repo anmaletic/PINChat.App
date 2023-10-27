@@ -260,6 +260,7 @@ h1:focus {
     padding: 0 15px 5px 15px;
 }
 
-
-
-
+.selected {
+    background-color: var(--color-accent);
+    color: #fff;
+}

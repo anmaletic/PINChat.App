@@ -6,5 +6,6 @@ public interface ILoggedInUserModel
     string? DisplayName { get; set; }
     string? FirstName { get; set; }
     string? LastName { get; set; }
-    void ResetUserModel();
+    public List<UserModel> Contacts { get; set; }
+    public List<GroupModel> Groups { get; set; }
 }

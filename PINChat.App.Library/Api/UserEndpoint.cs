@@ -57,6 +57,12 @@ public class UserEndpoint : IUserEndpoint
                 _loggedInUser.DisplayName = result.DisplayName;
                 _loggedInUser.FirstName = result.FirstName;
                 _loggedInUser.LastName = result.LastName;
+                _loggedInUser.Contacts = result.Contacts;
+                _loggedInUser.Groups = result.Groups;
+
+                _loggedInUser.Contacts =
+                    _loggedInUser.Contacts.OrderBy(x => x.FirstName).ThenBy(x => x.LastName).ToList();
+                _loggedInUser.Groups = _loggedInUser.Groups.OrderBy(x => x.Name).ToList();
             }
             else
             {

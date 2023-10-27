@@ -10,7 +10,7 @@ public class UserModel : ILoggedInUserModel
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public List<UserModel> Contacts { get; set; } = new ();
-    // public List<GroupModel> Groups { get; set; }
+    public List<GroupModel> Groups { get; set; } = new ();
     
     public void ResetUserModel()
     {
@@ -19,6 +19,6 @@ public class UserModel : ILoggedInUserModel
         FirstName = "";
         LastName = "";
         Contacts = new List<UserModel>();
-        // Groups = new List<GroupModel>();
+        Groups = new List<GroupModel>();
     }
 }

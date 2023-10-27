@@ -1,7 +1,6 @@
 ﻿@page "/Chat"
 @using PINChat.App.Library.Models.Interfaces
 @using PINChat.App.Library.Models
-@using PINChat.App.Library.Services
 @using PINChat.App.Library.Api.Interfaces
 
 @inject ILoggedInUserModel LoggedInUser
@@ -66,6 +65,9 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+    
     HubConnection? _hubConnection;
 
     private string? _messageContent;
@@ -76,11 +78,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _users = await UserEndpoint.GetAll();
-        var self = _users.FirstOrDefault(x => x.Id == LoggedInUser.Id);
-        _users.Remove(self!);
+        var authState = await AuthState;
 
-        ConnectToHub();
+        if (authState.User.Identity!.IsAuthenticated)
+        {
+            _users = await UserEndpoint.GetAll();
+            var self = _users.FirstOrDefault(x => x.Id == LoggedInUser.Id);
+            _users.Remove(self!);
+            
+            ConnectToHub();
+        }
     }
 
     private async void ConnectToHub()

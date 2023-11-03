@@ -21,4 +21,6 @@ public class UserModel : ILoggedInUserModel
         Contacts = new List<UserModel>();
         Groups = new List<GroupModel>();
     }
+    
+    public string FullName => $"{FirstName} {LastName}";
 }

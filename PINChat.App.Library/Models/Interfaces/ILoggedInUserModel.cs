@@ -8,4 +8,5 @@ public interface ILoggedInUserModel
     string? LastName { get; set; }
     public List<UserModel> Contacts { get; set; }
     public List<GroupModel> Groups { get; set; }
+    string FullName { get; }
 }

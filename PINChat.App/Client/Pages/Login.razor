@@ -1,8 +1,4 @@
-﻿@page "/"
-@using PINChat.App.Library.Models
-@using PINChat.App.Authentication
-@using PINChat.App.Library.Api.Interfaces
-@using PINChat.App.Library.Models.Interfaces
+﻿@page "/login"
 
 @inject NavigationManager NavManager
 @inject IAuthenticationService AuthService
@@ -41,15 +37,13 @@
                         <label for="password" class="mt-2">Potvrda lozinke:</label>
                         <InputText id="confirmPassword" type="password" class="form-control" @bind-Value="_registrationModel.ConfirmPassword"/>
                         <ValidationMessage For="() => _registrationModel.ConfirmPassword" />
-                        
-                    </div>
+                    </div>                        
                     <div>
                         <button type="submit" class="btn-accent mt-4">Registracija</button>
                     </div>
                     <p style="text-align: center">
                         <a href="" @onclick='() => SetUserState("l")' @onclick:preventDefault >Povratak na prijavu</a>.
-                    </p>
-            
+                    </p>            
                 </EditForm>
             </div>
         }
@@ -156,19 +150,29 @@
 
             var result = await AuthService.Login(_authModel);
 
-            if (result is not null && !string.IsNullOrEmpty(LoggedInUser.DisplayName))
+            if (result is null)
             {
-                NavManager.NavigateTo("/Chat");
-            }
-            else
-            {
+                // user doesnt exist in pinchat.auth
                 _authenticationErrorText = "There was an error when trying to log in.";
                 _showAuthenticationError = true;
+                return;
             }
+
+            _authenticationErrorText = "";
+                
+            if (string.IsNullOrEmpty(LoggedInUser.DisplayName))
+            {
+                // if display name is empty, user data doesnt exist in pinchat.data
+                // need to fill user datas
+                NavManager.NavigateTo("/settings/user");
+                return;
+            }
+            
+            // user exists, navigate to chat page
+            NavManager.NavigateTo("/Chat");
         }
         catch (Exception e)
         {
-
             _authenticationErrorText = "Unable to login user.";
             _showAuthenticationError = true;
             Console.WriteLine("Unable to login user.");

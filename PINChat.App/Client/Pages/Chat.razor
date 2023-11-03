@@ -1,23 +1,28 @@
 ﻿@page "/Chat"
-@using PINChat.App.Library.Models.Interfaces
-@using PINChat.App.Library.Models
-@using PINChat.App.Library.Api.Interfaces
+@attribute [Authorize]
 
 @inject ILoggedInUserModel LoggedInUser
 @inject IUserEndpoint UserEndpoint
 @inject NavigationManager NavManager
 
-<div class="chat-view-wrapper">
+<div class="view-wrapper">
     <div class="chat-view">
         <aside class="chat-sidebar">
             <div class="user-data-container">
                 @* LoggedInUser Data *@
             
-                
-                <NavLink class="nav-link logout" href="logout">
-                    <span class="oi oi-account-logout"></span> Log Out
-                </NavLink>
-                <img src="resources/images/user-avatar.png" alt="User Avatar">
+                <div class="d-flex justify-content-between">
+                    <img class="img-avatar" src="resources/images/user-avatar.png" alt="User Avatar">
+                    
+                    <div class="d-flex">
+                        <NavLink class="nav-link" href="/settings/user">
+                            <image class="img-link" src="resources/images/settings.png"></image>
+                        </NavLink>
+                        <NavLink class="nav-link" href="logout">
+                            <image class="img-link" src="resources/images/logout.png"></image>
+                        </NavLink>
+                    </div>
+                </div>
                 <h2>@LoggedInUser.DisplayName</h2>
                 <h3>@LoggedInUser.FirstName @LoggedInUser.LastName</h3>
             </div>  
@@ -32,8 +37,6 @@
                             @target.FirstName @target.LastName
                         </li>
                     }
-                    
-                    <!-- Add more friends here -->
                 </ul>
                 
                 <h3>Groups</h3>

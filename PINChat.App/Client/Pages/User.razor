@@ -1,0 +1,146 @@
+﻿@page "/settings/user"
+@attribute [Authorize]
+
+@inject ILoggedInUserModel LoggedInUser
+@inject IUserEndpoint UserEndpoint
+
+
+<div class="view-wrapper">
+    <div class="user-view">
+        <div class="user-data">
+            <h3>Korisnički podaci:</h3>
+            
+            <EditForm Model="LoggedInUser" class="editForm" OnValidSubmit="SaveChanges">
+                
+                <div>
+                    <label for="displayName">Nadimak:</label>
+                    <InputText id="displayName" class="form-control" @bind-Value="LoggedInUser.DisplayName"/>
+                    <ValidationMessage For="() => LoggedInUser.DisplayName"/>
+                </div>
+                
+                <div>
+                    <label for="firstName">Ime:</label>
+                    <InputText id="firstName" class="form-control" @bind-Value="LoggedInUser.FirstName"/>
+                    <ValidationMessage For="() => LoggedInUser.DisplayName"/>
+                </div>
+                
+                <div>
+                    <label for="lastName">Prezime:</label>
+                    <InputText id="lastName" class="form-control" @bind-Value="LoggedInUser.LastName"/>
+                    <ValidationMessage For="() => LoggedInUser.LastName"/>
+                </div>
+                
+                <div>
+                    <label></label>
+                    <button type="submit" class="btn-accent" style="height: 36px">Spremi</button>
+                </div>
+            </EditForm>
+        </div>
+        
+        <div class="user-contacts">
+            <h3 class="mt-2">Kontakti:</h3>
+            <div class="contacts-groups-data">
+                <div class="saved-data">
+                    <ul>
+                        @foreach (var item in LoggedInUser.Contacts)
+                        {
+                            <li class="saved-item-container" @onclick="() => RemoveContact(item)">
+                                <div>@item.FullName</div>
+                                <NavLink>x</NavLink>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                
+                <div class="new-data">
+                    <ul>
+                        @foreach (var item in _contacts)
+                        {
+                            <li class="new-item-container" @onclick="() => AddContact(item)">
+                                <div>@item.FullName</div>
+                                <NavLink>+</NavLink>
+                                <div>@item.DisplayName</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="user-groups">
+            <h3 class="mt-2">Grupe:</h3>
+            <div class="contacts-groups-data">
+                <div class="saved-data">
+                    <ul>
+                        @foreach (var item in LoggedInUser.Groups)
+                        {
+                            <li class="saved-item-container">
+                                <div>@item.Name</div>
+                                <NavLink>x</NavLink>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+
+    private List<UserModel> _contacts = new(); 
+
+    private void SaveChanges()
+    {
+        
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+
+        if (authState.User.Identity!.IsAuthenticated)
+        {
+            _contacts = await UserEndpoint.GetAll();
+            _contacts = _contacts
+                .ExceptBy(LoggedInUser.Contacts.Select(s=> s.Id), contact => contact.Id)
+                .ToList();
+            _contacts.Remove(_contacts.FirstOrDefault(x => x.Id == LoggedInUser.Id)!);
+            
+            _contacts = _contacts.OrderBy(x => x.FullName).ToList();
+        }
+    }
+
+    private void AddContact(UserModel user)
+    {
+        LoggedInUser.Contacts.Add(user);
+        _contacts.Remove(user);
+        LoggedInUser.Contacts = LoggedInUser.Contacts.OrderBy(x => x.FullName).ToList();
+    }
+
+    private void RemoveContact(UserModel user)
+    {
+        LoggedInUser.Contacts.Remove(user);
+        _contacts.Add(user);
+        _contacts = _contacts.OrderBy(x => x.FullName).ToList();
+    }
+
+
+
+
+
+}

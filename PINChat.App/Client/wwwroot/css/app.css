@@ -80,6 +80,12 @@ h1:focus {
     animation: spin 1300ms linear infinite;
 }
 
+.view-wrapper {
+    background-color: #fff;
+    display: grid;
+    height: 100vh
+}
+
 @keyframes spin {
     0% {
         transform: rotate(0deg)
@@ -112,12 +118,6 @@ h1:focus {
 
 /*  Chat View  */
 
-.chat-view-wrapper {
-    background-color: #fff;
-    display: grid;
-    height: 100vh
-}
-
 .chat-view {
     background-color: var(--color-accent); ;
     margin: 20px 40px;
@@ -139,14 +139,16 @@ h1:focus {
     margin-bottom: 1px;
 }
 
-.user-data-container.logout {
-    text-align: right;
-}
-
-.user-data-container img {
+.user-data-container .img-avatar {
     width: 100px;
     height: 100px;
     border-radius: 50%;
+}
+
+.user-data-container .img-link {
+    margin-left: 10px;
+    height: 35px;
+    width: 35px;
 }
 
 .friends-groups-container {
@@ -264,3 +266,77 @@ h1:focus {
     background-color: var(--color-accent);
     color: #fff;
 }
+
+
+.user-view {
+    background-color: var(--color-accent); ;
+    margin: 20px 40px;
+    display: grid;
+    grid-template-rows: 130px 1fr 1fr;
+}
+
+.user-data {
+    background-color: #fff;
+    padding-bottom: 15px;
+    margin-bottom: 1px;
+}
+
+.user-contacts {
+    background-color: #fff;
+    margin-bottom: 1px;
+    padding-bottom: 20px;
+    display: grid;
+    grid-template-rows: min-content 1fr;
+}
+
+.user-groups {
+    background-color: #fff;
+    display: grid;
+    grid-template-rows: min-content 1fr;
+}
+
+.user-data .editForm {
+    display: grid;
+    grid-gap: 5px;
+    grid-template-columns: auto auto auto auto;
+}
+
+
+.contacts-groups-data {
+    display: grid;
+    grid-template-columns: 250px auto;
+    grid-template-rows: 1fr;
+    height: calc((100vh - 300px) / 2);
+}
+
+.contacts-groups-data .saved-data {
+    border-right: 1px solid var(--color-accent);
+    background-color: #fff;
+    margin-right: 1px;
+    overflow-y: auto;
+}
+
+.saved-item-container {
+    padding-right: 20px;
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    cursor: default;
+}
+
+
+.contacts-groups-data .new-data {
+    overflow-x: auto;
+}
+
+.new-item-container {
+    border: 1px solid var(--color-accent);
+    width: 200px;
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    grid-template-rows: 1fr 1fr;
+    cursor: pointer;
+    margin: 5px;
+    padding: 5px;
+}
+
+

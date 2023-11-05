@@ -220,7 +220,6 @@ h1:focus {
     display: flex;
     flex-direction: column;
 
-
     overflow-y: auto;
     overscroll-behavior-y: contain;
     scroll-snap-type: y mandatory;
@@ -228,6 +227,13 @@ h1:focus {
 
 .chat-output > div:last-child {
     scroll-snap-align: start;
+}
+
+.loading-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }
 
 .message-container {
@@ -328,15 +334,40 @@ h1:focus {
     overflow-x: auto;
 }
 
+.horizontal-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.horizontal-list li {    
+    flex: 0 0 calc(16% - 10px);
+    margin-right: 10px; 
+    margin-bottom: 10px; 
+}
+
 .new-item-container {
     border: 1px solid var(--color-accent);
     width: 200px;
     display: grid;
-    grid-template-columns: 1fr min-content;
     grid-template-rows: 1fr 1fr;
     cursor: pointer;
     margin: 5px;
     padding: 5px;
+}
+
+.new-group-container {
+    border: 1px solid var(--color-accent);
+    height: 50px;
+    cursor: pointer;
+    margin: 5px;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
 }
 
 

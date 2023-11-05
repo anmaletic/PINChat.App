@@ -1,8 +1,10 @@
 ﻿@page "/Chat"
 @attribute [Authorize]
 
+@inject IJSRuntime JsRuntime
 @inject ILoggedInUserModel LoggedInUser
 @inject IUserEndpoint UserEndpoint
+@inject IMessageEndpoint MessageEndpoint
 @inject NavigationManager NavManager
 
 <div class="view-wrapper">
@@ -29,7 +31,7 @@
             
             <div class="friends-groups-container">
                 <!-- Friends and Groups go here -->
-                <h3>Contacts</h3>
+                <h3>Kontakti</h3>
                 <ul>
                     @foreach (var target in LoggedInUser.Contacts)
                     {
@@ -39,7 +41,7 @@
                     }
                 </ul>
                 
-                <h3>Groups</h3>
+                <h3>Grupe</h3>
                 <ul>
                    @foreach (var target in LoggedInUser.Groups)
                    {
@@ -52,25 +54,38 @@
         </aside>
         
         <main class="chat-container">
-            <div class="chat-output">
-                @foreach (var message in _messages)
-                {
-                    <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned message-container")">
-                        <p class="date">@message.Date.ToLocalTime()</p>
-                        <p class="message">@message.Content</p>
+            @if (!string.IsNullOrEmpty(_msgTarget) && _isMessageLoading)
+            {
+                <div class="loading-wrapper">
+                    <div class="spinnerContainer">
+                        <div class="spinner"></div>
                     </div>
-                }
-            </div>
+                </div>
+            }
+            else
+            {
+                <div class="chat-output" @ref="_chatOutput">
+                    @foreach (var message in _messages)
+                    {
+                        <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned message-container")">
+                            <p class="date">@message.CreatedDate.ToLocalTime()</p>
+                            <p class="message">@message.Content</p>
+                        </div>
+                    }
+                </div>
+            }
 
             <div class="chat-input">
                 <input type="text" Placeholder="Nova poruka" @bind="_messageContent" @onkeydown="@(HandleKeyDown)">
-                <button class="btn-accent" @onclick="SendMessage" >Pošalji</button>
+                <button class="btn-accent" @onclick="SendMessage">Pošalji</button>
             </div>
         </main>
     </div>
 </div>
 
 @code {
+    private ElementReference? _chatOutput;
+    
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
     
@@ -79,9 +94,10 @@
     private string? _messageContent;
     private List<MessageModel> _messages = new();
 
-    private List<UserModel> _users = new();
     private string? _msgTarget = "";
 
+    private bool _isMessageLoading;
+    
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthState;
@@ -104,37 +120,74 @@
             .Build();
 
 
-        _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", MessageReceived);
+        _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", OnMessageReceived);
         await _hubConnection.StartAsync();
         await _hubConnection.InvokeAsync("Login", LoggedInUser.Id!);
     }
 
-    private void MessageReceived(string action, MessageDtoModel message)
+    private async Task OnMessageReceived(string action, MessageDtoModel message)
     {
-
+        _isMessageLoading = true;
+        
         var msg = new MessageModel(LoggedInUser)
         {
-            Date = message.Date,
-            Target = message.Target,
-            Source = message.Source,
+            CreatedDate = message.CreatedDate,
+            TargetId = message.TargetId,
+            SourceId = message.SourceId,
             Content = message.Content,
-            Image = message.Image
+            Image = message.Image,
+            IsOrigin = LoggedInUser.Id == message.SourceId
         };
-        
-        if (msg.Source == _msgTarget)
+    
+        if (msg.SourceId == _msgTarget)
         {
             switch (action)
             {
                 case "add":
                 {
                     _messages.Add(msg);
+                    // await ScrollToBottom();
                     StateHasChanged();   
                     break;
                 }   
             }
         }
     }
-        
+
+    private async void SetMessageTarget(string targetId)
+    {
+        try
+        {
+            _msgTarget = targetId;
+            _isMessageLoading = true;
+            StateHasChanged();
+            
+            MessageQueryModel msgModel = new()
+            {
+                SourceId = LoggedInUser.Id,
+                TargetId = targetId
+            };
+
+            _messages.Clear();
+            _messages = await MessageEndpoint.GetById(msgModel);
+
+            foreach (var msg in _messages)
+            {
+                msg.IsOrigin = LoggedInUser.Id == msg.SourceId;
+            }
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            _isMessageLoading = false;
+            StateHasChanged();
+        }
+    }
     
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
@@ -150,30 +203,53 @@
     }
     private async Task SendMessage()
     {
-        var message = new MessageModel(LoggedInUser)
+        if (string.IsNullOrEmpty(_msgTarget))
         {
-            Date = DateTime.UtcNow,
-            Target = _msgTarget,
-            Source = LoggedInUser.Id,
-            Content = _messageContent
-        };
+            return;
+        }
         
-        _messages.Add(message);
-        await _hubConnection!.SendAsync("MessageSingle", "add", message);
+        try
+        {
+            var message = new MessageModel(LoggedInUser)
+            {
+                CreatedDate = DateTime.UtcNow,
+                TargetId = _msgTarget,
+                SourceId = LoggedInUser.Id,
+                Content = _messageContent,
+                Image = "",
+                IsOrigin = true
+            };
         
-        _messageContent = "";
+            _messages.Add(message);
+            await _hubConnection!.SendAsync("MessageSingle", "add", message);
+
+            await MessageEndpoint.CreateNew(message);
+            
+            _messageContent = "";
+
+            // await ScrollToBottom();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
     }
 
-    private void SetMessageTarget(string target)
-    {
-        _messages.Clear();
-        _msgTarget = target;
-    }
     
-    // Function to check if a contact is selected
     private string ContactIsSelected(string contactId)
     {
         return _msgTarget == contactId ? "selected" : "";
     }
     
+    
+    
+    // private async Task ScrollToBottom()
+    // {
+    //     if (_chatOutput != null)
+    //     {
+    //         await JsRuntime.InvokeVoidAsync("blazorHelpers.scrollToBottom", _chatOutput);
+    //     }
+    // }
 }

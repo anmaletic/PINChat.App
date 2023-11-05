@@ -55,15 +55,15 @@ public class ChatHub : Hub
     {
         try
         {
-            var recipient = _users.FirstOrDefault((user) => user.Name == messageDto.Target);
+            var recipient = _users.FirstOrDefault((user) => user.Name == messageDto.TargetId);
                 
             if (recipient is not null) 
             {
                 Console.WriteLine($"<> Message received:");
                 Console.WriteLine($"<> Recipient name: {recipient.Name}");
                 Console.WriteLine($"<> Recipient ID: {recipient.ConnectionId}");
-                Console.WriteLine($"<> Date: {messageDto.Date}");
-                Console.WriteLine($"<> Source: {messageDto.Source}");
+                Console.WriteLine($"<> Date: {messageDto.CreatedDate}");
+                Console.WriteLine($"<> Source: {messageDto.SourceId}");
                 Console.WriteLine($"<> Message: {messageDto.Content}");
                 
                 await Clients.Client(recipient.ConnectionId!).SendAsync("ReceiveMessage", action, messageDto);

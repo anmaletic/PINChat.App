@@ -11,11 +11,11 @@ public class MessageModel
         _loggedInUser = loggedInUser;
     }
 
-    public DateTime Date { get; set; }
-    public string? Target { get; set; }
-    public string? Source { get; set; }
+    public int Id { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public string? TargetId { get; set; }
+    public string? SourceId { get; set; }
     public string? Content { get; set; }
     public string? Image { get; set; }
-
-    public bool IsOrigin => _loggedInUser.Id == Source;
+    public bool IsOrigin { get; set; }
 }

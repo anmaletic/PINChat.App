@@ -71,7 +71,6 @@ public class UserEndpoint : IUserEndpoint
         }
     }
 
-
     public async Task<List<UserModel>> GetAll()
     {
         using (HttpResponseMessage response = await _apiHelper.ApiClient.GetAsync("api/User/GetAll"))
@@ -86,5 +85,97 @@ public class UserEndpoint : IUserEndpoint
                 throw new Exception(response.ReasonPhrase);
             }
         }
+    }
+
+    public async Task<string> UpdateUser(UserModel user)
+    {
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/User/Update", user);
+        
+        var msg = await response.Content.ReadAsStringAsync();
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return msg;
+        }
+
+        throw new Exception(msg);
+    }
+    
+    public async Task<string> AddContact(string userId, string contactId)
+    {
+        var p = new
+        {
+            UserId = userId,
+            ContactId = contactId
+        };
+        
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/User/Contact/Insert", p);
+        
+        var msg = await response.Content.ReadAsStringAsync();
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return msg;
+        }
+
+        throw new Exception(msg);
+    }
+    public async Task<string> RemoveContact(string userId, string contactId)
+    {
+        var p = new
+        {
+            UserId = userId,
+            ContactId = contactId
+        };
+        
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/User/Contact/Delete", p);
+        
+        var msg = await response.Content.ReadAsStringAsync();
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return msg;
+        }
+
+        throw new Exception(msg);
+    }
+    
+    public async Task<string> AddGroup(string userId, string groupId)
+    {
+        var p = new
+        {
+            UserId = userId,
+            GroupId = groupId
+        };
+        
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/User/Group/Insert", p);
+        
+        var msg = await response.Content.ReadAsStringAsync();
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return msg;
+        }
+
+        throw new Exception(msg);
+    }
+    public async Task<string> RemoveGroup(string userId, string groupId)
+    {
+        var p = new
+        {
+            UserId = userId,
+            GroupId = groupId
+        };
+        
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/User/Group/Delete", p);
+        
+        var msg = await response.Content.ReadAsStringAsync();
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return msg;
+        }
+
+        throw new Exception(msg);
     }
 }

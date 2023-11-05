@@ -3,6 +3,7 @@
 
 @inject ILoggedInUserModel LoggedInUser
 @inject IUserEndpoint UserEndpoint
+@inject IGroupEndpoint GroupEndpoint
 
 
 <div class="view-wrapper">
@@ -10,7 +11,7 @@
         <div class="user-data">
             <h3>Korisnički podaci:</h3>
             
-            <EditForm Model="LoggedInUser" class="editForm" OnValidSubmit="SaveChanges">
+            <EditForm Model="LoggedInUser" class="editForm" OnValidSubmit="Update">
                 
                 <div>
                     <label for="displayName">Nadimak:</label>
@@ -58,7 +59,6 @@
                         {
                             <li class="new-item-container" @onclick="() => AddContact(item)">
                                 <div>@item.FullName</div>
-                                <NavLink>+</NavLink>
                                 <div>@item.DisplayName</div>
                             </li>
                         }
@@ -74,9 +74,20 @@
                     <ul>
                         @foreach (var item in LoggedInUser.Groups)
                         {
-                            <li class="saved-item-container">
+                            <li class="saved-item-container" @onclick="() => RemoveGroup(item)">
                                 <div>@item.Name</div>
                                 <NavLink>x</NavLink>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                
+                <div class="new-data">
+                    <ul class="horizontal-list">
+                        @foreach (var item in _groups)
+                        {
+                            <li class="new-group-container" @onclick="() => AddGroup(item)">
+                                <div>@item.Name</div>
                             </li>
                         }
                     </ul>
@@ -86,27 +97,13 @@
     </div>
 </div>
 
-    
-
-
-
-
-
-
-
-
-
 
 @code {
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
 
     private List<UserModel> _contacts = new(); 
-
-    private void SaveChanges()
-    {
-        
-    }
+    private List<GroupModel> _groups = new(); 
 
 
     protected override async Task OnInitializedAsync()
@@ -120,26 +117,55 @@
                 .ExceptBy(LoggedInUser.Contacts.Select(s=> s.Id), contact => contact.Id)
                 .ToList();
             _contacts.Remove(_contacts.FirstOrDefault(x => x.Id == LoggedInUser.Id)!);
-            
             _contacts = _contacts.OrderBy(x => x.FullName).ToList();
+
+            _groups = await GroupEndpoint.GetAll();
+            _groups = _groups.ExceptBy(LoggedInUser.Groups.Select(s=> s.Id), group => group.Id)
+                .ToList();
+            _groups = _groups.OrderBy(x => x.Name).ToList();
         }
     }
 
-    private void AddContact(UserModel user)
+    private async Task Update()
+    {
+        await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
+    } 
+    
+    private async Task AddContact(UserModel user)
     {
         LoggedInUser.Contacts.Add(user);
         _contacts.Remove(user);
         LoggedInUser.Contacts = LoggedInUser.Contacts.OrderBy(x => x.FullName).ToList();
+        
+        await UserEndpoint.AddContact(LoggedInUser.Id!, user.Id!);
     }
 
-    private void RemoveContact(UserModel user)
+    private async Task RemoveContact(UserModel user)
     {
         LoggedInUser.Contacts.Remove(user);
         _contacts.Add(user);
         _contacts = _contacts.OrderBy(x => x.FullName).ToList();
+        
+        await UserEndpoint.RemoveContact(LoggedInUser.Id!, user.Id!);
     }
 
+    private async Task AddGroup(GroupModel group)
+    {
+        LoggedInUser.Groups.Add(group);
+        _groups.Remove(group);
+        LoggedInUser.Groups = LoggedInUser.Groups.OrderBy(x => x.Name).ToList();
+        
+        await UserEndpoint.AddGroup(LoggedInUser.Id!, group.Id!);
+    }
 
+    private async Task RemoveGroup(GroupModel group)
+    {
+        LoggedInUser.Groups.Remove(group);
+        _groups.Add(group);
+        _groups = _groups.OrderBy(x => x.Name).ToList();
+
+        await UserEndpoint.RemoveGroup(LoggedInUser.Id!, group.Id!);
+    }
 
 
 

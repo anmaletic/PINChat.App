@@ -13,10 +13,25 @@ public class MessageEndpoint : IMessageEndpoint
     }
     
     
-    public async Task<List<MessageModel>> GetById(MessageQueryModel msg)
+    public async Task<List<MessageModel>> GetByUserId(MessageQueryModel msg)
     {
             
-        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/Message", msg);
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/Message/GetByUser", msg);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsAsync<List<MessageModel>>();
+            return result;
+        }
+        else
+        {
+            throw new Exception(response.ReasonPhrase);
+        }
+    }
+    
+    public async Task<List<MessageModel>> GetByGroupId(MessageQueryModel msg)
+    {
+        using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/Message/GetByGroup", msg);
         
         if (response.IsSuccessStatusCode)
         {

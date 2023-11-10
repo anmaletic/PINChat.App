@@ -1,3 +1,4 @@
+using Blazor.SubtleCrypto;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -19,6 +20,9 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
+
+builder.Services.AddSubtleCrypto(opt =>
+    opt.Key = builder.Configuration.GetValue<string>("Encryption:Key"));
 
 builder.Services.AddSingleton<IApiHelper, ApiHelper>();
 builder.Services.AddSingleton<ILoggedInUserModel, UserModel>();

@@ -4,13 +4,6 @@ namespace PINChat.App.Library.Models;
 
 public class MessageModel
 {
-    private ILoggedInUserModel _loggedInUser;
-        
-    public MessageModel(ILoggedInUserModel loggedInUser)
-    {
-        _loggedInUser = loggedInUser;
-    }
-
     public int Id { get; set; }
     public DateTime CreatedDate { get; set; }
     public string? TargetId { get; set; }

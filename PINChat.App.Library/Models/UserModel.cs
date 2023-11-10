@@ -2,10 +2,8 @@
 
 namespace PINChat.App.Library.Models;
 
-public class UserModel : ILoggedInUserModel
+public class UserModel : TargetModel, ILoggedInUserModel
 {
-    
-    public string? Id { get; set; }
     public string? DisplayName { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }

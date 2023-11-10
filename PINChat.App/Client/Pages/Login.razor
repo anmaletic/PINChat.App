@@ -7,21 +7,6 @@
 @inject IRegistrationEndpoint RegistrationEndpoint
 
 
-@inject IConfiguration config
-<div>
-    Test
-    <p>1. @(config.GetValue<string>("Encryption:Key"))</p>
-
-    @foreach (var c in config.AsEnumerable())
-    {
-        <p>@c.Key = @c.Value</p>
-    }
-
-
-</div>
-
-
-
 <div class="loginView d-flex flex-column align-items-center">
     <div class="row col-xxl-4 col-xl-6 col-lg-6 col-md-7 col-sm-9 col-10 my-auto align-items-center">
         <div>
@@ -179,7 +164,7 @@
             if (string.IsNullOrEmpty(LoggedInUser.DisplayName))
             {
                 // if display name is empty, user data doesnt exist in pinchat.data
-                // need to fill user datas
+                // need to fill user data
                 NavManager.NavigateTo("/settings/user");
                 return;
             }

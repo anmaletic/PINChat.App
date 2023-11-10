@@ -54,7 +54,7 @@
                 </div>
                 
                 <div class="new-data">
-                    <ul>
+                    <ul class="horizontal-list">
                         @foreach (var item in _contacts)
                         {
                             <li class="new-item-container" @onclick="() => AddContact(item)">
@@ -104,7 +104,6 @@
 
     private List<UserModel> _contacts = new(); 
     private List<GroupModel> _groups = new(); 
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -166,7 +165,4 @@
 
         await UserEndpoint.RemoveGroup(LoggedInUser.Id!, group.Id!);
     }
-
-
-
 }

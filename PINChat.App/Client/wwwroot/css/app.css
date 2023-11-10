@@ -38,7 +38,6 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
-    
 
 /*  Custom CSS Classes  */
 
@@ -95,9 +94,12 @@ h1:focus {
 /*  Login View  */
 
 .loginView {
-    background-color: transparent;
-    margin: 0;
+    background-image: linear-gradient(to bottom right, #ebf2f4, #455f6b);
+    margin-right: 0;
+    margin-left: 0;
+    padding: 0;
     height: 100vh;
+    width: 100vw;
 }
 
 

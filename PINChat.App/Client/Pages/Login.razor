@@ -9,14 +9,15 @@
 
 @inject IConfiguration config
 <div>
+    Test
     <p>1. @(config.GetValue<string>("Encryption:Key"))</p>
-    
+
     @foreach (var c in config.AsEnumerable())
     {
         <p>@c.Key = @c.Value</p>
     }
-    
-    
+
+
 </div>
 
 

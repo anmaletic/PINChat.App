@@ -5,6 +5,8 @@
 @inject IMessageEndpoint MessageEndpoint
 @inject NavigationManager NavManager
 @inject ICryptoService Crypto
+@inject IJSRuntime JsRuntime
+@inject ISettingEndpoint SettingEndpoint
 
 
 <div class="view-wrapper">
@@ -117,6 +119,13 @@
         if (authState.User.Identity!.IsAuthenticated)
         {
             ConnectToHub();
+
+            var enycrptionKey = await SettingEndpoint.GetByKey("EncryptionKey");
+            
+            Crypto = new CryptoService(JsRuntime, new CryptoOptions()
+            {
+                Key = enycrptionKey.Value
+            });
         }
     }
     private async void ConnectToHub()

@@ -1,11 +1,6 @@
-using Microsoft.AspNetCore.ResponseCompression;
 using PINChat.App.Server;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Configuration.AddJsonFile("appsettings.json", optional:true, reloadOnChange:true);
-builder.Configuration.AddJsonFile("appsettings.Development.json", optional:true, reloadOnChange:true);
-builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddCors(policy =>
 {

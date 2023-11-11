@@ -14,10 +14,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Configuration.AddJsonFile("appsettings.json", optional:true, reloadOnChange:true);
-builder.Configuration.AddJsonFile("appsettings.Development.json", optional:true, reloadOnChange:true);
-builder.Configuration.AddEnvironmentVariables();
-
 //  Personal Services
 
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
@@ -25,8 +21,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 
-builder.Services.AddSubtleCrypto(opt =>
-    opt.Key = builder.Configuration.GetValue<string>("Encryption:Key"));
+builder.Services.AddSubtleCrypto();
 
 builder.Services.AddSingleton<IApiHelper, ApiHelper>();
 builder.Services.AddSingleton<ILoggedInUserModel, UserModel>();
@@ -34,6 +29,7 @@ builder.Services.AddTransient<IUserEndpoint, UserEndpoint>();
 builder.Services.AddTransient<IGroupEndpoint, GroupEndpoint>();
 builder.Services.AddTransient<IRegistrationEndpoint, RegistrationEndpoint>();
 builder.Services.AddTransient<IMessageEndpoint, MessageEndpoint>();
+builder.Services.AddTransient<ISettingEndpoint, SettingEndpoint>();
 
 builder.Services.AddHttpClient("PINChat.App.ServerAPI",
     client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));

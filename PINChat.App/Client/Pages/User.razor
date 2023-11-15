@@ -4,33 +4,46 @@
 @inject ILoggedInUserModel LoggedInUser
 @inject IUserEndpoint UserEndpoint
 @inject IGroupEndpoint GroupEndpoint
+@inject IJSRuntime JsRuntime
+@inject IImageEndpoint ImageEndpoint
 
 
 <div class="view-wrapper">
     <div class="user-view">
         <div class="user-data">
-            <h3>Korisnički podaci:</h3>
+            <div class="top-bar">
+                <h3>Korisnički podaci:</h3>
+                <NavLink class="nav-link" href="/chat">
+                    <img src="resources/images/Exit.png" alt="Exit Icon"/>
+                </NavLink>
+            </div>
+            
+            <InputFile id="fileInput" accept=".jpg, .jpeg, .png" OnChange="HandleFileChange" style="display: none"/>
             
             <EditForm Model="LoggedInUser" class="editForm" OnValidSubmit="Update">
+                <div>
+                    <label for="avatarImg" >Slika (max 50KB):</label>
+                    <img class="img-avatar-small" id="avatarImg" src="data:image;base64,@Convert.ToBase64String(LoggedInUser.Avatar!)" alt="avatar" @onclick="OpenFileDialog"/>
+                </div>
                 
                 <div>
                     <label for="displayName">Nadimak:</label>
                     <InputText id="displayName" class="form-control" @bind-Value="LoggedInUser.DisplayName"/>
                     <ValidationMessage For="() => LoggedInUser.DisplayName"/>
                 </div>
-                
+
                 <div>
                     <label for="firstName">Ime:</label>
                     <InputText id="firstName" class="form-control" @bind-Value="LoggedInUser.FirstName"/>
                     <ValidationMessage For="() => LoggedInUser.DisplayName"/>
                 </div>
-                
+
                 <div>
                     <label for="lastName">Prezime:</label>
                     <InputText id="lastName" class="form-control" @bind-Value="LoggedInUser.LastName"/>
                     <ValidationMessage For="() => LoggedInUser.LastName"/>
                 </div>
-                
+
                 <div>
                     <label></label>
                     <button type="submit" class="btn-accent" style="height: 36px">Spremi</button>
@@ -47,7 +60,6 @@
                         {
                             <li class="saved-item-container" @onclick="() => RemoveContact(item)">
                                 <div>@item.FullName</div>
-                                <NavLink>x</NavLink>
                             </li>
                         }
                     </ul>
@@ -59,10 +71,18 @@
                         {
                             <li class="new-item-container" @onclick="() => AddContact(item)">
                                 <div>@item.FullName</div>
+                                <img class="img-avatar-small" style="grid-row: span 2" src="@ImageEndpoint.GetUserImage(new UserModel() { Id = item.Id })" alt="avatar"/>
                                 <div>@item.DisplayName</div>
                             </li>
                         }
                     </ul>
+                    
+                    @if (_isContactsLoading)
+                    {
+                        <div>
+                            <Loading/>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -76,7 +96,6 @@
                         {
                             <li class="saved-item-container" @onclick="() => RemoveGroup(item)">
                                 <div>@item.Name</div>
-                                <NavLink>x</NavLink>
                             </li>
                         }
                     </ul>
@@ -91,10 +110,27 @@
                             </li>
                         }
                     </ul>
+                    
+                    @if (_isGroupsLoading)
+                    {
+                        <div>
+                            <Loading/>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
+    
+    @if (_isLoading)
+    {
+        <Loading />
+    }
+    
+    @if (_isModalVisible)
+    {
+        <ModalDialog Title="Upozorenje" Message="@_dialogMessage" OnButtonClicked="ModalDialogClicked"/>
+    }
 </div>
 
 
@@ -102,6 +138,12 @@
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
 
+    private string? _dialogMessage = "";
+    private bool _isModalVisible;
+    private bool _isLoading;
+    private bool _isContactsLoading;
+    private bool _isGroupsLoading;
+    
     private List<UserModel> _contacts = new(); 
     private List<GroupModel> _groups = new(); 
 
@@ -111,23 +153,74 @@
 
         if (authState.User.Identity!.IsAuthenticated)
         {
-            _contacts = await UserEndpoint.GetAll();
-            _contacts = _contacts
-                .ExceptBy(LoggedInUser.Contacts.Select(s=> s.Id), contact => contact.Id)
-                .ToList();
-            _contacts.Remove(_contacts.FirstOrDefault(x => x.Id == LoggedInUser.Id)!);
-            _contacts = _contacts.OrderBy(x => x.FullName).ToList();
-
-            _groups = await GroupEndpoint.GetAll();
-            _groups = _groups.ExceptBy(LoggedInUser.Groups.Select(s=> s.Id), group => group.Id)
-                .ToList();
-            _groups = _groups.OrderBy(x => x.Name).ToList();
+            _ = LoadContactsDataAsync();
+            _ = LoadGroupsDataAsync();
         }
     }
 
+    private async Task LoadContactsDataAsync()
+    {
+        try
+        {
+            _isContactsLoading = true;
+            StateHasChanged();
+            
+            await Task.Run(async () =>
+            {
+                _contacts = await UserEndpoint.GetAll();
+                _contacts = _contacts
+                    .ExceptBy(LoggedInUser.Contacts.Select(s => s.Id), contact => contact.Id)
+                    .ToList();
+                _contacts.Remove(_contacts.FirstOrDefault(x => x.Id == LoggedInUser.Id)!);
+                _contacts = _contacts.OrderBy(x => x.FullName).ToList();
+            });
+        }
+        finally
+        {
+            _isContactsLoading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task LoadGroupsDataAsync()
+    {
+        try
+        {
+            await Task.Run( async () =>
+            {
+                _isGroupsLoading = true;
+                StateHasChanged();
+               
+                _groups = await GroupEndpoint.GetAll();
+                _groups = _groups.ExceptBy(LoggedInUser.Groups.Select(s=> s.Id), group => group.Id)
+                    .ToList();
+                _groups = _groups.OrderBy(x => x.Name).ToList();
+            });
+        }
+        finally
+        {
+            _isGroupsLoading = false;
+            StateHasChanged();
+        }
+    }
+    
     private async Task Update()
     {
-        await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            await Task.Run(async () =>
+            {
+                await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     } 
     
     private async Task AddContact(UserModel user)
@@ -165,4 +258,53 @@
 
         await UserEndpoint.RemoveGroup(LoggedInUser.Id!, group.Id!);
     }
+
+    private async Task OpenFileDialog()
+    {
+        await JsRuntime.InvokeVoidAsync("blazorHelpers.triggerClick", "fileInput");
+    }
+    
+    
+    
+    private IBrowserFile? _selectedFile;
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            _selectedFile = e.GetMultipleFiles().FirstOrDefault();
+        
+            switch (_selectedFile?.ContentType)
+            {
+                default:
+                    _dialogMessage = "Tip datoteke nije ispravan!";
+                    _isModalVisible = true;
+                    StateHasChanged();
+                    break;
+                case "image/jpeg":
+                case "image/jpg":
+                case "image/png":
+                {
+                    using var memoryStream = new MemoryStream();
+                    await _selectedFile.OpenReadStream(maxAllowedSize: 50*1024).CopyToAsync(memoryStream);
+                    var imgBytes = memoryStream.ToArray();
+
+                    LoggedInUser.Avatar = imgBytes;
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _dialogMessage = "Datoteka je veća od 50KB!";
+            _isModalVisible = true;
+            StateHasChanged();
+        }
+    }
+
+    private void ModalDialogClicked()
+    {
+        _isModalVisible = false;
+    }
+
 }

@@ -1,6 +1,8 @@
 window.blazorHelpers = {
-    scrollToBottom: function(element) {
-        if (element.scrollHeight != null)
-            element.scrollTop = element.scrollHeight;
+    triggerClick: function(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.click();
+        }
     }
 };

@@ -47,27 +47,26 @@ public class UserEndpoint : IUserEndpoint
         _apiHelper.ApiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         _apiHelper.ApiClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
-        using (var response = await _apiHelper.ApiClient.GetAsync("/api/User"))
+        using var response = await _apiHelper.ApiClient.GetAsync("/api/User");
+        if (response.IsSuccessStatusCode)
         {
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadAsAsync<UserModel>();
+            var result = await response.Content.ReadAsAsync<UserModel>();
                 
-                _loggedInUser.Id = result.Id;
-                _loggedInUser.DisplayName = result.DisplayName;
-                _loggedInUser.FirstName = result.FirstName;
-                _loggedInUser.LastName = result.LastName;
-                _loggedInUser.Contacts = result.Contacts;
-                _loggedInUser.Groups = result.Groups;
+            _loggedInUser.Id = result.Id;
+            _loggedInUser.DisplayName = result.DisplayName;
+            _loggedInUser.FirstName = result.FirstName;
+            _loggedInUser.LastName = result.LastName;
+            _loggedInUser.Avatar = result.Avatar;
+            _loggedInUser.Contacts = result.Contacts;
+            _loggedInUser.Groups = result.Groups;
 
-                _loggedInUser.Contacts =
-                    _loggedInUser.Contacts.OrderBy(x => x.FirstName).ThenBy(x => x.LastName).ToList();
-                _loggedInUser.Groups = _loggedInUser.Groups.OrderBy(x => x.Name).ToList();
-            }
-            else
-            {
-                throw new Exception(response.ReasonPhrase);
-            }
+            _loggedInUser.Contacts =
+                _loggedInUser.Contacts.OrderBy(x => x.FirstName).ThenBy(x => x.LastName).ToList();
+            _loggedInUser.Groups = _loggedInUser.Groups.OrderBy(x => x.Name).ToList();
+        }
+        else
+        {
+            throw new Exception(response.ReasonPhrase);
         }
     }
 

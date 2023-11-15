@@ -7,6 +7,8 @@ public class UserModel : TargetModel, ILoggedInUserModel
     public string? DisplayName { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public byte[]? Avatar { get; set; }  
+    public string? AvatarPath { get; set; }  
     public List<UserModel> Contacts { get; set; } = new ();
     public List<GroupModel> Groups { get; set; } = new ();
     

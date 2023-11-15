@@ -6,6 +6,8 @@ public interface ILoggedInUserModel
     string? DisplayName { get; set; }
     string? FirstName { get; set; }
     string? LastName { get; set; }
+    byte[]? Avatar { get; set; }
+    string? AvatarPath { get; set; }
     public List<UserModel> Contacts { get; set; }
     public List<GroupModel> Groups { get; set; }
     string FullName { get; }

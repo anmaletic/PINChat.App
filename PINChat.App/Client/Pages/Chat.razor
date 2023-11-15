@@ -7,7 +7,7 @@
 @inject ICryptoService Crypto
 @inject IJSRuntime JsRuntime
 @inject ISettingEndpoint SettingEndpoint
-
+@inject IImageEndpoint ImageEndpoint
 
 <div class="view-wrapper">
     <div class="chat-view">
@@ -16,7 +16,7 @@
                 @* LoggedInUser Data *@
             
                 <div class="d-flex justify-content-between">
-                    <img class="img-avatar" src="resources/images/user-avatar.png" alt="User Avatar">
+                    <img class="img-avatar" src="@LoggedInUser.AvatarPath" alt="User Avatar">
                     
                     <div class="d-flex">
                         <NavLink class="nav-link" href="/settings/user">
@@ -36,20 +36,23 @@
                 <!-- Friends and Groups go here -->
                 <h3>Kontakti</h3>
                 <ul>
-                    @foreach (var target in LoggedInUser.Contacts)
+                    @foreach (var contact in LoggedInUser.Contacts)
                     {
-                        <li class="@ContactIsSelected(target.Id!)" @onclick="() => SetMessageTarget(target)">
-                            @target.FirstName @target.LastName
+                        <li class="@ContactIsSelected(contact.Id!)" @onclick="() => SetMessageTarget(contact)">
+                            <div style="display: grid; grid-template-columns: 1fr min-content; width: 100%;">
+                                <div>@contact.FullName</div> 
+                                <img class="img-avatar-small" src="@contact.AvatarPath" alt="contact_avatar"/>
+                            </div>
                         </li>
                     }
                 </ul>
 
                 <h3>Grupe</h3>
                 <ul>
-                    @foreach (var target in LoggedInUser.Groups)
+                    @foreach (var group in LoggedInUser.Groups)
                     {
-                        <li class="@ContactIsSelected(target.Id!)" @onclick="() => SetMessageTarget(target)">
-                            @target.Name
+                        <li class="@ContactIsSelected(group.Id!)" @onclick="() => SetMessageTarget(group)">
+                            @group.Name
                         </li>
                     }
                 </ul>
@@ -57,39 +60,46 @@
         </aside>
         
         <main class="chat-container">
-            @if (!string.IsNullOrEmpty(_msgTarget.Id) && _isMessageLoading)
-            {
-                <div class="loading-wrapper">
-                    <div class="spinnerContainer">
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <div class="chat-output" @ref="_chatOutput" @onscroll="() => SetScrollState(false)">
-                    @foreach (var message in _messages)
+
+            <div class="chat-output" @onscroll="() => SetScrollState(false)">
+                
+                <div>
+                    @if (!string.IsNullOrEmpty(_msgTarget.Id) && _isMessageLoading)
                     {
-                        <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned message-wrapper " +
-                                      $"{(message == _messages.Last() && _isAutoScrollEnabled ? "scroll-snap-start" : "")}")">
-                            <div class="message-container">
-                                <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned avatar-container ")">
-                                    <img src="resources/images/user-avatar.png" alt="User Avatar">
-                                </div>
-                                
-                                <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned content-container ")">
-                                    @if (!message.IsOrigin)
-                                    {
-                                        <p class="sender">@LoggedInUser.Contacts.FirstOrDefault(x => x.Id == message.SourceId)!.FullName</p>
-                                    }
-                                    <p class="date">@message.CreatedDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
-                                    <p class="message">@message.Content</p>
-                                </div>
-                            </div>
-                        </div>
+                        <Loading/>
                     }
                 </div>
-            }
+                
+                @foreach (var message in _messages)
+                {
+                    <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned message-wrapper " + $"{(message == _messages.Last() && _isAutoScrollEnabled ? "scroll-snap-start" : "")}")">
+                        <div class="message-container">
+
+                            @if (message.IsOrigin)
+                            {
+                                <div class="right-aligned avatar-container">
+                                    <img src="@LoggedInUser.AvatarPath" alt="User Avatar">
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="@($"left-aligned avatar-container ")">
+                                    <img src=@message.SourceAvatar alt="User Avatar">
+                                </div>
+                            }
+
+                            <div class="@($"{(message.IsOrigin ? "right" : "left")}-aligned content-container ")">
+                                @if (!message.IsOrigin)
+                                {
+                                    <p class="sender">@message.SourceName</p>
+                                }
+                                <p class="date">@message.CreatedDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
+                                <p class="message">@message.Content</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
 
             <div class="chat-input">
                 <input type="text" Placeholder="Nova poruka" @bind="_messageContent" @onkeydown="@(HandleKeyDown)">
@@ -105,30 +115,35 @@
     HubConnection? _hubConnection;
     
     private bool _isAutoScrollEnabled;
-    private ElementReference? _chatOutput;
     
     private List<MessageModel> _messages = new();
     private string? _messageContent;
     private TargetModel _msgTarget = new();
+    private GroupModel? _messageTargetGroup;
     private bool _isMessageLoading;
+
+    
+    
     
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthState;
-
         if (authState.User.Identity!.IsAuthenticated)
         {
-            ConnectToHub();
-
-            var enycrptionKey = await SettingEndpoint.GetByKey("EncryptionKey");
-            
-            Crypto = new CryptoService(JsRuntime, new CryptoOptions()
+            LoggedInUser.AvatarPath = ImageEndpoint.GetUserImage(new UserModel { Id = LoggedInUser.Id });
+            foreach (var contact in LoggedInUser.Contacts)
             {
-                Key = enycrptionKey.Value
-            });
+                contact.AvatarPath = ImageEndpoint.GetUserImage(LoggedInUser.Contacts.FirstOrDefault(x => x.Id == contact.Id)!);
+            }
+            
+            StateHasChanged();
+            
+            SetupChatHub();
+            SetupEncryption();
         }
     }
-    private async void ConnectToHub()
+    
+    private async void SetupChatHub()
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(NavManager.ToAbsoluteUri("/chathub"), options =>
@@ -141,45 +156,40 @@
 
         _hubConnection.On<string, MessageDtoModel>("ReceiveMessage", OnMessageReceived);
         await _hubConnection.StartAsync();
+        
         List<string> groups = LoggedInUser.Groups.Select(x => x.Id).ToList()!;
         await _hubConnection.InvokeAsync("Login", LoggedInUser.Id!, groups);
     }
-
+    private async void SetupEncryption()
+    {
+        var enycrptionKey = await SettingEndpoint.GetByKey("EncryptionKey");
+            
+        Crypto = new CryptoService(JsRuntime, new CryptoOptions()
+        {
+            Key = enycrptionKey.Value
+        });
+    }
+    
     private async Task OnMessageReceived(string action, MessageDtoModel message)
     {
-        var msg = new MessageModel()
+        var msg = new MessageModel
         {
             CreatedDate = message.CreatedDate,
             TargetId = message.TargetId,
             SourceId = message.SourceId,
+            SourceAvatar = message.SourceAvatar,
+            SourceName = message.SourceName,
             Content = await Crypto.DecryptAsync(message.Content),
             Image = message.Image,
             IsOrigin = LoggedInUser.Id == message.SourceId
         };
 
-       
-        switch (action)
+        if ((action == "AddSingle" && msg.SourceId == _msgTarget.Id) ||
+            (action == "AddGroup" && msg.TargetId == _msgTarget.Id))
         {
-            case "addSingle":
-            {        
-                if (msg.SourceId != _msgTarget.Id) return;
-
-                _messages.Add(msg);
-
-                SetScrollState(true);
-                StateHasChanged();   
-                break;
-            }             
-            case "addGroup":
-            {
-                if (msg.TargetId != _msgTarget.Id) return;
-
-                _messages.Add(msg);
-
-                SetScrollState(true);
-                StateHasChanged();   
-                break;
-            }   
+            _messages.Add(msg);
+            SetScrollState(true);
+            StateHasChanged();
         }
     }
 
@@ -189,6 +199,8 @@
         {
             _msgTarget = target;
             _isMessageLoading = true;
+            var targetAvatar = "";
+            var targetName = "";
             StateHasChanged();
             
             _messages.Clear();
@@ -199,19 +211,40 @@
                 TargetId = target.Id
             };
             
-            if (_msgTarget.GetType() == typeof(UserModel))
+            switch (_msgTarget)
             {
-                _messages = await MessageEndpoint.GetByUserId(msgModel);
-            }
-            else if (_msgTarget.GetType() == typeof(GroupModel))
-            {
-                _messages = await MessageEndpoint.GetByGroupId(msgModel);
+                case UserModel:
+                    _messages = await MessageEndpoint.GetByUserId(msgModel);
+                    targetAvatar = ImageEndpoint.GetUserImage(new UserModel() { Id = _msgTarget.Id });
+                    targetName = LoggedInUser.Contacts.FirstOrDefault(x => x.Id == _msgTarget.Id)!.FullName;
+                    break;
+                case GroupModel:
+                    _messages = await MessageEndpoint.GetByGroupId(msgModel);
+                    _messageTargetGroup = LoggedInUser.Groups.FirstOrDefault(x => x.Id == _msgTarget.Id);
+
+                    foreach (var contact in _messageTargetGroup!.Contacts)
+                    {
+                        contact.AvatarPath = ImageEndpoint.GetUserImage(new UserModel { Id = contact.Id });
+                    }
+                    break;
             }
             
             foreach (var msg in _messages)
             {
-                msg.IsOrigin = LoggedInUser.Id == msg.SourceId;
                 msg.Content = await Crypto.DecryptAsync(msg.Content);
+                msg.IsOrigin = LoggedInUser.Id == msg.SourceId;
+
+                switch (_msgTarget)
+                {
+                    case UserModel:
+                        msg.SourceAvatar = targetAvatar;
+                        msg.SourceName = targetName;
+                        break;
+                    case GroupModel:
+                        msg.SourceAvatar = _messageTargetGroup!.Contacts.FirstOrDefault(x => x.Id == msg.SourceId)!.AvatarPath;
+                        msg.SourceName = _messageTargetGroup!.Contacts.FirstOrDefault(x => x.Id == msg.SourceId)!.FullName;
+                        break;
+                }
             }
             
             SetScrollState(true);
@@ -263,24 +296,27 @@
         
             _messages.Add(displayMessage);
 
-            var dtoMessage = new MessageModel()
+            var dtoMessage = new MessageDtoModel()
             {
                 CreatedDate = DateTime.UtcNow,
                 TargetId = _msgTarget.Id,
                 SourceId = LoggedInUser.Id,
+                SourceName = LoggedInUser.FullName,
+                SourceAvatar = LoggedInUser.AvatarPath,
                 Content = (await Crypto.EncryptAsync(_messageContent)).Value,
-                Image = "",
-                IsOrigin = true
+                Image = ""
             };
             
+            
             // send to chat hub
-            if (_msgTarget.GetType() == typeof(UserModel))
+            switch (_msgTarget)
             {
-                await _hubConnection!.SendAsync("MessageSingle", "addSingle", dtoMessage);
-            }
-            else if (_msgTarget.GetType() == typeof(GroupModel))
-            {
-                await _hubConnection!.SendAsync("MessageGroup", "addGroup", dtoMessage);
+                case UserModel:
+                    await _hubConnection!.SendAsync("MessageSingle", "AddSingle", dtoMessage);
+                    break;
+                case GroupModel:
+                    await _hubConnection!.SendAsync("MessageGroup", "AddGroup", dtoMessage);
+                    break;
             }
             
             // save to database

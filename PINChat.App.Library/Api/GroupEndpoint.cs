@@ -25,7 +25,4 @@ public class GroupEndpoint : IGroupEndpoint
             throw new Exception(response.ReasonPhrase);
         }
     }
-    
-    
-    
 }

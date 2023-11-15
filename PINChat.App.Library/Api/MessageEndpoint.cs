@@ -1,5 +1,6 @@
 ﻿using PINChat.App.Library.Api.Interfaces;
 using PINChat.App.Library.Models;
+using PINChat.App.Shared.Models;
 
 namespace PINChat.App.Library.Api;
 
@@ -44,7 +45,7 @@ public class MessageEndpoint : IMessageEndpoint
         }
     }
     
-    public async Task<string> CreateNew(MessageModel model)
+    public async Task<string> CreateNew(MessageDtoModel model)
     {
         using var response = await _apiHelper.ApiClient.PostAsJsonAsync("/api/Message/Insert", model);
         

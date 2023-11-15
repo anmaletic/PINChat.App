@@ -30,6 +30,7 @@ builder.Services.AddTransient<IGroupEndpoint, GroupEndpoint>();
 builder.Services.AddTransient<IRegistrationEndpoint, RegistrationEndpoint>();
 builder.Services.AddTransient<IMessageEndpoint, MessageEndpoint>();
 builder.Services.AddTransient<ISettingEndpoint, SettingEndpoint>();
+builder.Services.AddTransient<IImageEndpoint, ImageEndpoint>();
 
 builder.Services.AddHttpClient("PINChat.App.ServerAPI",
     client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));

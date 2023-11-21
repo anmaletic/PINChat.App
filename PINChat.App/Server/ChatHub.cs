@@ -31,9 +31,9 @@ public class ChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async void Login(string user, List<string> groups)
+    public async void Login(string userId, List<string> groups)
     {
-        var existingUser = _users.FirstOrDefault(x => x.ConnectionId == user);
+        var existingUser = _users.FirstOrDefault(x => x.UserId == userId);
         if (existingUser is not null)
         {
             _users.Remove(existingUser);
@@ -41,7 +41,7 @@ public class ChatHub : Hub
         
         _users.Add(new User()
         {
-            UserId = user,
+            UserId = userId,
             ConnectionId = Context.ConnectionId
         });
         

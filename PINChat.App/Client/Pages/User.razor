@@ -6,6 +6,7 @@
 @inject IGroupEndpoint GroupEndpoint
 @inject IJSRuntime JsRuntime
 @inject IImageEndpoint ImageEndpoint
+@inject NavigationManager NavManager
 
 
 <div class="view-wrapper">
@@ -13,7 +14,7 @@
         <div class="user-data">
             <div class="top-bar">
                 <h3>Korisnički podaci:</h3>
-                <NavLink class="nav-link" href="/chat">
+                <NavLink class="nav-link" href="" @onclick="ClosePage">
                     <img src="resources/images/Exit.png" alt="Exit Icon"/>
                 </NavLink>
             </div>
@@ -35,7 +36,7 @@
                 <div>
                     <label for="firstName">Ime:</label>
                     <InputText id="firstName" class="form-control" @bind-Value="LoggedInUser.FirstName"/>
-                    <ValidationMessage For="() => LoggedInUser.DisplayName"/>
+                    <ValidationMessage For="() => LoggedInUser.FirstName"/>
                 </div>
 
                 <div>
@@ -205,21 +206,31 @@
     }
     
     private async Task Update()
-    {
-        try
+    {        
+        if (string.IsNullOrEmpty(LoggedInUser.DisplayName) ||
+                 string.IsNullOrEmpty(LoggedInUser.FirstName) ||
+                 string.IsNullOrEmpty(LoggedInUser.LastName))
         {
-            _isLoading = true;
-            StateHasChanged();
-
-            await Task.Run(async () =>
-            {
-                await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
-            });
+            _dialogMessage = "Nisu sva polja popunjena!";
+            _isModalVisible = true;
         }
-        finally
+        else
         {
-            _isLoading = false;
-            StateHasChanged();
+            try
+            {
+                _isLoading = true;
+                StateHasChanged();
+
+                await Task.Run(async () =>
+                {
+                    await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
+                });
+            }
+            finally
+            {
+                _isLoading = false;
+                StateHasChanged();
+            }
         }
     } 
     
@@ -305,6 +316,20 @@
     private void ModalDialogClicked()
     {
         _isModalVisible = false;
+    }
+
+    private void ClosePage()
+    {
+        if (string.IsNullOrEmpty(LoggedInUser.DisplayName) ||
+            string.IsNullOrEmpty(LoggedInUser.FirstName) ||
+            string.IsNullOrEmpty(LoggedInUser.LastName))
+        {
+            NavManager.NavigateTo("logout");
+        }
+        else
+        {
+            NavManager.NavigateTo("/chat");
+        }
     }
 
 }

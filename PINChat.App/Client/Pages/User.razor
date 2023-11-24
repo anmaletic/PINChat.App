@@ -144,7 +144,7 @@
     private bool _isLoading;
     private bool _isContactsLoading;
     private bool _isGroupsLoading;
-    
+
     private List<UserModel> _contacts = new(); 
     private List<GroupModel> _groups = new(); 
 
@@ -165,7 +165,7 @@
         {
             _isContactsLoading = true;
             StateHasChanged();
-            
+
             await Task.Run(async () =>
             {
                 _contacts = await UserEndpoint.GetAll();
@@ -182,7 +182,7 @@
             StateHasChanged();
         }
     }
-    
+
     private async Task LoadGroupsDataAsync()
     {
         try
@@ -191,7 +191,7 @@
             {
                 _isGroupsLoading = true;
                 StateHasChanged();
-               
+
                 _groups = await GroupEndpoint.GetAll();
                 _groups = _groups.ExceptBy(LoggedInUser.Groups.Select(s=> s.Id), group => group.Id)
                     .ToList();
@@ -204,7 +204,7 @@
             StateHasChanged();
         }
     }
-    
+
     private async Task Update()
     {        
         if (string.IsNullOrEmpty(LoggedInUser.DisplayName) ||
@@ -233,13 +233,13 @@
             }
         }
     } 
-    
+
     private async Task AddContact(UserModel user)
     {
         LoggedInUser.Contacts.Add(user);
         _contacts.Remove(user);
         LoggedInUser.Contacts = LoggedInUser.Contacts.OrderBy(x => x.FullName).ToList();
-        
+
         await UserEndpoint.AddContact(LoggedInUser.Id!, user.Id!);
     }
 
@@ -248,12 +248,13 @@
         LoggedInUser.Contacts.Remove(user);
         _contacts.Add(user);
         _contacts = _contacts.OrderBy(x => x.FullName).ToList();
-        
+
         await UserEndpoint.RemoveContact(LoggedInUser.Id!, user.Id!);
     }
 
     private async Task AddGroup(GroupModel group)
     {
+        group.Contacts.Add((LoggedInUser as UserModel)!);
         LoggedInUser.Groups.Add(group);
         _groups.Remove(group);
         LoggedInUser.Groups = LoggedInUser.Groups.OrderBy(x => x.Name).ToList();
@@ -263,6 +264,7 @@
 
     private async Task RemoveGroup(GroupModel group)
     {
+        group.Contacts.Remove((LoggedInUser as UserModel)!);
         LoggedInUser.Groups.Remove(group);
         _groups.Add(group);
         _groups = _groups.OrderBy(x => x.Name).ToList();

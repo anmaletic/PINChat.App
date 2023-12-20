@@ -33,21 +33,28 @@ public class ChatHub : Hub
 
     public async void Login(string userId, List<string> groups)
     {
-        var existingUser = _users.FirstOrDefault(x => x.UserId == userId);
-        if (existingUser is not null)
+        try
         {
-            _users.Remove(existingUser);
+            var existingUser = _users.FirstOrDefault(x => x.UserId == userId);
+            if (existingUser is not null)
+            {
+                _users.Remove(existingUser);
+            }
+        
+            _users.Add(new User()
+            {
+                UserId = userId,
+                ConnectionId = Context.ConnectionId
+            });
+        
+            foreach (var group in groups)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, group);
+            }
         }
-        
-        _users.Add(new User()
+        catch (Exception e)
         {
-            UserId = userId,
-            ConnectionId = Context.ConnectionId
-        });
-        
-        foreach (var group in groups)
-        {
-            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+            Console.WriteLine(e);
         }
     }
 
@@ -55,7 +62,7 @@ public class ChatHub : Hub
     {
         try
         {
-            var recipient = _users.FirstOrDefault((user) => user.UserId == messageDto.TargetId);
+            var recipient = _users.FirstOrDefault(user => user.UserId == messageDto.TargetId);
                 
             if (recipient is not null) 
             {

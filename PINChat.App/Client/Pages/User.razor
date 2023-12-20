@@ -21,28 +21,28 @@
             
             <InputFile id="fileInput" accept=".jpg, .jpeg, .png" OnChange="HandleFileChange" style="display: none"/>
             
-            <EditForm Model="LoggedInUser" class="editForm" OnValidSubmit="Update">
+            <EditForm Model="_tempUser" class="editForm" OnValidSubmit="Update">
                 <div>
                     <label for="avatarImg" >Slika (max 50KB):</label>
-                    <img class="img-avatar-small" id="avatarImg" src="data:image;base64,@Convert.ToBase64String(LoggedInUser.Avatar!)" alt="avatar" @onclick="OpenFileDialog"/>
+                    <img class="img-avatar-small" id="avatarImg" src="data:image;base64,@Convert.ToBase64String(_tempUser.Avatar!)" alt="avatar" @onclick="OpenFileDialog"/>
                 </div>
                 
                 <div>
                     <label for="displayName">Nadimak:</label>
-                    <InputText id="displayName" class="form-control" @bind-Value="LoggedInUser.DisplayName"/>
-                    <ValidationMessage For="() => LoggedInUser.DisplayName"/>
+                    <InputText id="displayName" class="form-control" @bind-Value="_tempUser.DisplayName"/>
+                    <ValidationMessage For="() => _tempUser.DisplayName"/>
                 </div>
 
                 <div>
                     <label for="firstName">Ime:</label>
-                    <InputText id="firstName" class="form-control" @bind-Value="LoggedInUser.FirstName"/>
-                    <ValidationMessage For="() => LoggedInUser.FirstName"/>
+                    <InputText id="firstName" class="form-control" @bind-Value="_tempUser.FirstName"/>
+                    <ValidationMessage For="() => _tempUser.FirstName"/>
                 </div>
 
                 <div>
                     <label for="lastName">Prezime:</label>
-                    <InputText id="lastName" class="form-control" @bind-Value="LoggedInUser.LastName"/>
-                    <ValidationMessage For="() => LoggedInUser.LastName"/>
+                    <InputText id="lastName" class="form-control" @bind-Value="_tempUser.LastName"/>
+                    <ValidationMessage For="() => _tempUser.LastName"/>
                 </div>
 
                 <div>
@@ -139,6 +139,8 @@
     [CascadingParameter]
     public Task<AuthenticationState> AuthState { get; set; }
 
+    private UserModel _tempUser;
+
     private string? _dialogMessage = "";
     private bool _isModalVisible;
     private bool _isLoading;
@@ -154,6 +156,14 @@
 
         if (authState.User.Identity!.IsAuthenticated)
         {
+            _tempUser = new UserModel
+            {
+                DisplayName = LoggedInUser.DisplayName,
+                FirstName = LoggedInUser.FirstName,
+                LastName = LoggedInUser.LastName,
+                Avatar = LoggedInUser.Avatar
+            };
+            
             _ = LoadContactsDataAsync();
             _ = LoadGroupsDataAsync();
         }
@@ -224,6 +234,11 @@
                 await Task.Run(async () =>
                 {
                     await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
+
+                    LoggedInUser.DisplayName = _tempUser.DisplayName;
+                    LoggedInUser.FirstName = _tempUser.FirstName;
+                    LoggedInUser.LastName = _tempUser.LastName;
+                    LoggedInUser.Avatar = _tempUser.Avatar;
                 });
             }
             finally

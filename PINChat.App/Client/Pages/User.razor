@@ -233,12 +233,12 @@
 
                 await Task.Run(async () =>
                 {
-                    await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
-
                     LoggedInUser.DisplayName = _tempUser.DisplayName;
                     LoggedInUser.FirstName = _tempUser.FirstName;
                     LoggedInUser.LastName = _tempUser.LastName;
                     LoggedInUser.Avatar = _tempUser.Avatar;
+
+                    await UserEndpoint.UpdateUser((LoggedInUser as UserModel)!);
                 });
             }
             finally

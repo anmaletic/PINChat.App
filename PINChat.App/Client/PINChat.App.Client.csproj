@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,6 +24,10 @@
     <ItemGroup>
         <ProjectReference Include="..\..\PINChat.App.Library\PINChat.App.Library.csproj" />
         <ProjectReference Include="..\Shared\PINChat.App.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
     </ItemGroup>
 
     <ItemGroup>
